@@ -1,6 +1,7 @@
 from datetime import datetime
 from google import genai
 from google.genai.errors import APIError
+import html
 import json
 import requests
 import time
@@ -192,7 +193,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 4. Structure the output precisely as:
                    - **Power Ranking Score:** [Score out of 10]
                    - **Letter Grade:** [Grade]
-                   - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
+                   - **Strengths:** [Analytical bullet points detailing what little viable talent excels]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
                    - **Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
                 """
@@ -205,9 +206,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
 
       try:
         response = generate_content_with_resilience(client, contents)
-        # Save output to session state so it persists across UI states
         st.session_state.latest_report = response.text
-
         log_to_google_sheet(team_name, response.text)
 
       except Exception as err:
@@ -220,15 +219,63 @@ if st.button("Run T.A.R.D.S. Analysis"):
   else:
     st.warning("Please upload a screenshot or type out your roster first!")
 
-# Display the report and the copy-friendly section ONLY if a report has been generated
+# Display the report and matching copy button ONLY if a report has been generated
 if st.session_state.latest_report:
   st.markdown("---")
   st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
   st.markdown(st.session_state.latest_report)
 
-  with st.expander("📋 Copy Report for Sharing"):
-    st.write(
-        "Click the copy icon in the top right of the box below to grab the"
-        " clean text for group chats or league boards:"
-    )
-    st.code(st.session_state.latest_report, language="markdown")
+  # Prepare safe text for JavaScript execution
+  safe_report_text = (
+      st.session_state.latest_report.replace("\\", "\\\\")
+      .replace("`", "\\`")
+      .replace("$", "\\$")
+  )
+
+  # Custom styled button matching Streamlit's native button look that copies to clipboard
+  copy_button_html = f"""
+    <style>
+    .copy-btn {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #133822;
+        color: #e2f0d9;
+        padding: 0.5rem 1rem;
+        border: 1px solid #2d6a4f;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        width: 100%;
+        text-align: center;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+        margin-top: 10px;
+    }}
+    .copy-btn:hover {{
+        background-color: #1b4d32;
+        border-color: #52b788;
+        color: #ffffff;
+    }}
+    </style>
+
+    <button class="copy-btn" onclick="copyTextToClipboard()">
+        📋 Copy Analysis to Clipboard
+    </button>
+
+    <script>
+    function copyTextToClipboard() {{
+        const textToCopy = `{safe_report_text}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {{
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '✅ Copied Successfully!';
+            setTimeout(() => {{
+                btn.innerHTML = '📋 Copy Analysis to Clipboard';
+            }}, 2000);
+        }}).catch(err => {{
+            console.error('Failed to copy text: ', err);
+        }});
+    }}
+    </script>
+    """
+  st.components.v1.html(copy_button_html, height=70)
