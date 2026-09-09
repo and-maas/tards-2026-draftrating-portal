@@ -10,7 +10,7 @@ import streamlit as st
 
 # 1. Page Configuration & Dark Green Aesthetic Styling with 8-Bit Font
 st.set_page_config(
-    page_title="T.A.R.D.S. Fantasy Portal", page_icon="🏈", layout="centered"
+    page_title="T.A.R.D.S. 2.0 Fantasy Portal", page_icon="🏈", layout="centered"
 )
 
 st.markdown(
