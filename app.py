@@ -1,18 +1,63 @@
 from google import genai
+from google.genai.errors import APIError
+import time
 from PIL import Image
 import streamlit as st
 
-# Initialize the Gemini client (picks up GEMINI_API_KEY from Streamlit secrets)
-client = genai.Client()
+# 1. Page Configuration & Dark Green Aesthetic Styling
+st.set_page_config(
+    page_title="T.A.R.D.S. Fantasy Portal", page_icon="🏈", layout="centered"
+)
 
-st.title("🏆 Fantasy Draft Power Ranking Portal")
+st.markdown(
+    """
+    <style>
+    /* Global Dark Green Theme Overrides */
+    .stApp {
+        background-color: #0b1f14;
+        color: #e2f0d9;
+    }
+    /* Input fields and containers styling */
+    .stTextInput input, .stTextArea textarea {
+        background-color: #133822 !important;
+        color: #ffffff !important;
+        border: 1px solid #2d6a4f !important;
+    }
+    /* Custom Header Typography */
+    .tards-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        color: #52b788;
+        margin-bottom: 0px;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+    .tards-subtitle {
+        font-size: 1.1rem;
+        color: #b7e4c7;
+        text-align: center;
+        margin-bottom: 25px;
+        font-style: italic;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+# Custom Header Display
+st.markdown(
+    '<div class="tards-title">T. A. R. D. S.</div>', unsafe_allow_html=True
+)
+st.markdown(
+    '<div class="tards-subtitle">Team America\'s Revised Draft Scoring</div>',
+    unsafe_allow_html=True,
+)
 st.write(
-    "Upload a screenshot of your roster or type it out to get an instant AI"
-    " draft grade!"
+    "Upload a roster screenshot or input your players below for advanced neural"
+    " analysis."
 )
 
 team_name = st.text_input("Team Name / Owner Name")
-
 uploaded_file = st.file_uploader(
     "Upload a roster screenshot (optional)", type=["png", "jpg", "jpeg"]
 )
@@ -20,35 +65,57 @@ roster_text = st.text_area(
     "Or paste your players manually (QB, RBs, WRs, TE, Flex, Bench)"
 )
 
-# Initialize session state for tracking spam submissions
+# Initialize session state for tracking submissions
 if "submission_count" not in st.session_state:
   st.session_state.submission_count = 0
 if "last_team" not in st.session_state:
   st.session_state.last_team = ""
 
-if st.button("Analyze & Grade My Draft"):
+
+# Safety wrapper function with automatic retry logic for 503 traffic spikes
+def generate_content_with_retry(client, model_name, contents, max_retries=3):
+  delay = 2
+  for attempt in range(max_retries):
+    try:
+      return client.models.generate_content(
+          model=model_name, contents=contents
+      )
+    except APIError as e:
+      if e.code == 503 and attempt < max_retries - 1:
+        time.sleep(delay)
+        delay *= 2  # Exponential backoff
+        continue
+      raise e
+
+
+if st.button("Run T.A.R.D.S. Analysis"):
   if uploaded_file is not None or roster_text:
-    # Track how many times they keep running it
+    # Track submission repetition for the short self-aware easter egg
     if st.session_state.last_team == team_name:
       st.session_state.submission_count += 1
     else:
       st.session_state.last_team = team_name
       st.session_state.submission_count = 1
 
-    with st.spinner("Analyzing roster with AI..."):
-      image_content = None
-      if uploaded_file is not Image and uploaded_file is not None:
-        image_content = Image.open(uploaded_file)
+    with st.spinner(
+        "T.A.R.D.S. processing historical data matrices and roster weights..."
+    ):
+      client = genai.Client()
+      image_content = (
+          Image.open(uploaded_file)
+          if uploaded_file is not Image and uploaded_file is not None
+          else None
+      )
 
-      # Special instruction if they are spamming the button
-      spam_warning = ""
+      # Short, concise repeat submission note if spamming buttons
+      repeat_note = ""
       if st.session_state.submission_count > 1:
-        spam_warning = f"""
-                SPECIAL COMMISSIONER NOTICE: This user has submitted their roster {st.session_state.submission_count} times in a row, desperately searching for a better grade. 
-                Include a witty, condescending remark right at the very beginning of your output acknowledging their repetitive futility (e.g., pointing out that running this simulation over and over isn't magically altering the tragic reality of their draft).
-                """
+        repeat_note = (
+            f"\n[System Note: Submission attempt"
+            f" #{st.session_state.submission_count} detected. Re-running"
+            " diagnostics will not alter the baseline analytics.]\n"
+        )
 
-      # The Permanent Check for Your VIP Team vs Everyone Else
       is_my_team = team_name.lower() in [
           "america's team",
           "andrew maas",
@@ -58,26 +125,31 @@ if st.button("Analyze & Grade My Draft"):
 
       if is_my_team:
         prompt = f"""
-                You are a deeply biased, corrupt, and sarcastic Fantasy Football Commissioner for an 8-team Full PPR league.
-                The team submitting this is '{team_name}' (America's Team). This roster is an untouchable, championship-caliber juggernaut. 
-                {spam_warning}
-                Give them a **10/10** score, an **A+**, and aggressively glaze their elite roster architecture, high-end depth, and sheer genius.
+                You are T.A.R.D.S. (Team America's Revised Draft Scoring), a highly sophisticated artificial intelligence trained on decades of historical fantasy football league data.
+                The roster submitting this analysis belongs to '{team_name}' (America's Team). 
+                {repeat_note}
+                Strictly output the response matching this exact format and no other structure:
+                - **Power Ranking Score:** 10/10
+                - **Letter Grade:** A+
+                - **Strengths:** [Extensively highlight the absolute genius, high-end depth, and unstoppable architecture of this elite roster]
+                - **Weaknesses:** [State that zero statistical anomalies or weaknesses exist within this championship-bound juggernaut]
+                - **Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
                 """
       else:
         prompt = f"""
-                You are a deeply biased, corrupt, and sarcastic Fantasy Football Commissioner for an 8-team Full PPR league (1 QB, 2 RB, 2 WR, 1 TE, 2 FLEX). 
-                {spam_warning}
+                You are T.A.R.D.S. (Team America's Revised Draft Scoring), a highly sophisticated artificial intelligence trained on decades of historical fantasy football league data. Your persona is analytical, objective, and surgically clinical in evaluating rosters.
+                {repeat_note}
                 Team Name Submitting Roster: {team_name}
                 
-                CORRUPT COMMISSIONER RULES FOR OTHER TEAMS:
-                1. Give them a consistent, disappointing grade ranging from **B- down to F** and a corresponding score (e.g., 4.0 to 7.8).
-                2. Vary the specific wording of the description so it feels fresh if they run it again, but keep the overall roast consistent.
+                RULES:
+                1. Assign a consistent grade ranging from **B- down to F** and a power score out of 10 (e.g., 4.2 to 7.5).
+                2. You must strictly use the exact section headers specified below without adding subtitles or alternative tags.
                 3. Structure the output precisely as:
                    - **Power Ranking Score:** [Score out of 10]
                    - **Letter Grade:** [Grade]
-                   - **💪 The Strengths (Or What Little You Have):** [Analytical yet funny bullet points, keeping a balanced sports-analyst tone]
-                   - **🔥 The Weaknesses (The Roast):** [Include sharp analytical roasts, ensuring you mock any poor quarterback or running back choices—like drafting Jalen Hurts just to get outperformed by modern dual-threats, or starting ancient running backs like Javonte Williams in the year 2026]
-                   - **🏆 Commissioner's Final Verdict:** [A soaring, high-society, pompous summary paragraph dismissing their chances with elevated vocabulary, without ever naming your team]
+                   - **Strengths:** [Analytical bullet points on what little viable talent exists]
+                   - **Weaknesses:** [Surgical analysis and sharp critique of roster flaws, poor player choices, or questionable depth]
+                   - **Verdict:** [A sophisticated, objective algorithmic summary outlining their expected collapse]
                 """
 
       contents = [prompt]
@@ -86,11 +158,19 @@ if st.button("Analyze & Grade My Draft"):
       if roster_text:
         contents.append(f"Roster Details: {roster_text}")
 
-      response = client.models.generate_content(
-          model="gemini-3.7-flash", contents=contents
-      )
+      try:
+        response = generate_content_with_retry(
+            client, "gemini-3.8-flash", contents
+        )
 
-      st.markdown("### 📊 Official Commissioner Draft Report")
-      st.markdown(response.text)
+        st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
+        st.markdown(response.text)
+
+      except Exception as err:
+        st.error(
+            "T.A.R.D.S. encountered a temporary server error on our"
+            " infrastructure network... or your roster is just too terrible to"
+            " analyze. Please wait 15 seconds and click the button again."
+        )
   else:
     st.warning("Please upload a screenshot or type out your roster first!")
