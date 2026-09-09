@@ -73,11 +73,13 @@ roster_text = st.text_area(
     "Or paste your players manually (QB, RBs, WRs, TE, Flex, Bench)"
 )
 
-# Initialize session state for tracking submissions
+# Initialize session state for tracking submissions and storing results
 if "submission_count" not in st.session_state:
   st.session_state.submission_count = 0
 if "last_team" not in st.session_state:
   st.session_state.last_team = ""
+if "latest_report" not in st.session_state:
+  st.session_state.latest_report = None
 
 
 @st.cache_resource
@@ -85,7 +87,7 @@ def get_genai_client():
   return genai.Client()
 
 
-# Enhanced resilience wrapper with deep model fallbacks for 503 traffic blocks
+# Resilient generation wrapper with model fallbacks for 503 protection
 def generate_content_with_resilience(client, contents, max_retries=3):
   models_to_try = [
       "gemini-3.8-flash",
@@ -106,7 +108,7 @@ def generate_content_with_resilience(client, contents, max_retries=3):
           delay *= 2
           continue
         if e.code == 503:
-          break  # Move to next model in the list
+          break
         raise e
   raise Exception("All fallback models are currently experiencing 503 spikes.")
 
@@ -203,13 +205,13 @@ if st.button("Run T.A.R.D.S. Analysis"):
 
       try:
         response = generate_content_with_resilience(client, contents)
-
-        st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
-        st.markdown(response.text)
+        # Save output to session state so it persists across UI states
+        st.session_state.latest_report = response.text
 
         log_to_google_sheet(team_name, response.text)
 
       except Exception as err:
+        st.session_state.latest_report = None
         st.error(
             "T.A.R.D.S. encountered a temporary server error on our"
             " infrastructure network... or your roster is just too terrible to"
@@ -217,3 +219,16 @@ if st.button("Run T.A.R.D.S. Analysis"):
         )
   else:
     st.warning("Please upload a screenshot or type out your roster first!")
+
+# Display the report and the copy-friendly section ONLY if a report has been generated
+if st.session_state.latest_report:
+  st.markdown("---")
+  st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
+  st.markdown(st.session_state.latest_report)
+
+  with st.expander("📋 Copy Report for Sharing"):
+    st.write(
+        "Click the copy icon in the top right of the box below to grab the"
+        " clean text for group chats or league boards:"
+    )
+    st.code(st.session_state.latest_report, language="markdown")
