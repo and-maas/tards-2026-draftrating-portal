@@ -80,18 +80,21 @@ if "last_team" not in st.session_state:
   st.session_state.last_team = ""
 
 
-# Cached Client Initialization to prevent connection drops under load
 @st.cache_resource
 def get_genai_client():
   return genai.Client()
 
 
-# Resilient generation wrapper with automatic retry and model fallback rotation
+# Enhanced resilience wrapper with deep model fallbacks for 503 traffic blocks
 def generate_content_with_resilience(client, contents, max_retries=3):
-  models_to_try = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.7-flash"]
+  models_to_try = [
+      "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+  ]
 
   for model_name in models_to_try:
-    delay = 2
+    delay = 3
     for attempt in range(max_retries):
       try:
         return client.models.generate_content(
@@ -100,16 +103,14 @@ def generate_content_with_resilience(client, contents, max_retries=3):
       except APIError as e:
         if e.code == 503 and attempt < max_retries - 1:
           time.sleep(delay)
-          delay *= 2  # Exponential backoff
+          delay *= 2
           continue
-        # If model specific or exhausted, break inner loop to try next model
         if e.code == 503:
-          break
+          break  # Move to next model in the list
         raise e
   raise Exception("All fallback models are currently experiencing 503 spikes.")
 
 
-# Function to log successful runs directly to your Google Sheet webhook
 def log_to_google_sheet(team, output_text):
   webhook_url = st.secrets.get("LOG_WEBHOOK_URL", "")
   if not webhook_url:
@@ -206,7 +207,6 @@ if st.button("Run T.A.R.D.S. Analysis"):
         st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
         st.markdown(response.text)
 
-        # Log successful run to Google Sheet
         log_to_google_sheet(team_name, response.text)
 
       except Exception as err:
