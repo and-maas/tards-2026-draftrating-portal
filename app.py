@@ -176,7 +176,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 - **Letter Grade:** A+
                 - **Strengths:** [Extensively highlight the absolute genius, high-end depth, and unstoppable architecture of this elite roster]
                 - **Weaknesses:** [State that zero statistical anomalies or weaknesses exist within this championship-bound juggernaut]
-                - **T. A. R. D. S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
+                - **T.A.R.D.S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
                 """
       else:
         prompt = f"""
@@ -186,15 +186,15 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 Team Name Submitting Roster: {team_name}
                 
                 RULES:
-                1. Assign a consistent grade ranging from **B- down to F** and a power score out of 10 (e.g., 4.2 to 7.5).
+                1. You must heavily vary the scoring spread. Assign a power score out of 10 ranging anywhere from **1.5 up to a hard ceiling of 7.4**, and letter grades strictly ranging between **C+ down to F** (e.g., C+, C, C-, D+, D, D-, or F). Never award a B- or higher to any non-America's team.
                 2. You must strictly use the exact section headers specified below without adding subtitles or alternative tags.
                 3. Ensure your analytical roasts mock poor choices—such as drafting players past their prime or shaky positional depth.
                 4. Structure the output precisely as:
-                   - **Power Ranking Score:** [Score out of 10]
-                   - **Letter Grade:** [Grade]
+                   - **Power Ranking Score:** [Score out of 10, strictly between 1.5 and 7.4]
+                   - **Letter Grade:** [Grade between C+ and F]
                    - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
-                   - **T. A. R. D. S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
+                   - **T.A.R.D.S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
                 """
 
       contents = [prompt]
