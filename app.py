@@ -19,6 +19,11 @@ st.markdown(
     /* Import 8-Bit Font (Press Start 2P) from Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+    /* Hide Streamlit top header toolbar, menu, and footer */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
     /* Global Dark Green Theme Overrides */
     .stApp {
         background-color: #0b1f14;
@@ -53,7 +58,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Custom Header Display (Updated to T.A.R.D.S. 2.0)
+# Custom Header Display
 st.markdown(
     '<div class="tards-title">T. A. R. D. S. 2.0</div>', unsafe_allow_html=True
 )
