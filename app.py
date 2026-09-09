@@ -1,7 +1,6 @@
 from datetime import datetime
 from google import genai
 from google.genai.errors import APIError
-import html
 import json
 import requests
 import time
@@ -193,7 +192,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 4. Structure the output precisely as:
                    - **Power Ranking Score:** [Score out of 10]
                    - **Letter Grade:** [Grade]
-                   - **Strengths:** [Analytical bullet points detailing what little viable talent excels]
+                   - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
                    - **Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
                 """
@@ -225,14 +224,15 @@ if st.session_state.latest_report:
   st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
   st.markdown(st.session_state.latest_report)
 
-  # Prepare safe text for JavaScript execution
-  safe_report_text = (
-      st.session_state.latest_report.replace("\\", "\\\\")
+  # Prepare text by stripping markdown asterisks for clean sharing
+  clean_report_text = (
+      st.session_state.latest_report.replace("**", "")
+      .replace("*", "")
+      .replace("\\", "\\\\")
       .replace("`", "\\`")
       .replace("$", "\\$")
   )
 
-  # Custom styled button matching Streamlit's native button look that copies to clipboard
   copy_button_html = f"""
     <style>
     .copy-btn {{
@@ -265,7 +265,7 @@ if st.session_state.latest_report:
 
     <script>
     function copyTextToClipboard() {{
-        const textToCopy = `{safe_report_text}`;
+        const textToCopy = `{clean_report_text}`;
         navigator.clipboard.writeText(textToCopy).then(() => {{
             const btn = document.querySelector('.copy-btn');
             btn.innerHTML = '✅ Copied Successfully!';
