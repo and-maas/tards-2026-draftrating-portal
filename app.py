@@ -176,7 +176,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 - **Letter Grade:** A+
                 - **Strengths:** [Extensively highlight the absolute genius, high-end depth, and unstoppable architecture of this elite roster]
                 - **Weaknesses:** [State that zero statistical anomalies or weaknesses exist within this championship-bound juggernaut]
-                - **Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
+                - **T. A. R. D. S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
                 """
       else:
         prompt = f"""
@@ -194,7 +194,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                    - **Letter Grade:** [Grade]
                    - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
-                   - **Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
+                   - **T. A. R. D. S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
                 """
 
       contents = [prompt]
@@ -224,10 +224,9 @@ if st.session_state.latest_report:
   st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
   st.markdown(st.session_state.latest_report)
 
-  # Prepare text by stripping markdown asterisks for clean sharing
+  # Clean report for clipboard (strips bolding asterisks while keeping structural bullet markers)
   clean_report_text = (
       st.session_state.latest_report.replace("**", "")
-      .replace("*", "")
       .replace("\\", "\\\\")
       .replace("`", "\\`")
       .replace("$", "\\$")
