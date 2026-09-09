@@ -4,7 +4,7 @@ import time
 from PIL import Image
 import streamlit as st
 
-# 1. Page Configuration & Dark Green Aesthetic Styling
+# 1. Page Configuration & Dark Green Aesthetic Styling with 8-Bit Font
 st.set_page_config(
     page_title="T.A.R.D.S. Fantasy Portal", page_icon="🏈", layout="centered"
 )
@@ -12,6 +12,9 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    /* Import 8-Bit Font (Press Start 2P) from Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
     /* Global Dark Green Theme Overrides */
     .stApp {
         background-color: #0b1f14;
@@ -23,21 +26,23 @@ st.markdown(
         color: #ffffff !important;
         border: 1px solid #2d6a4f !important;
     }
-    /* Custom Header Typography */
+    /* Custom 8-Bit Header Typography */
     .tards-title {
-        font-size: 2.8rem;
-        font-weight: 800;
+        font-family: 'Press Start 2P', monospace;
+        font-size: 2.2rem;
         color: #52b788;
-        margin-bottom: 0px;
+        margin-top: 10px;
+        margin-bottom: 15px;
         text-align: center;
-        letter-spacing: 2px;
+        text-shadow: 2px 2px #000000;
     }
     .tards-subtitle {
-        font-size: 1.1rem;
+        font-family: 'Press Start 2P', monospace;
+        font-size: 0.65rem;
         color: #b7e4c7;
         text-align: center;
-        margin-bottom: 25px;
-        font-style: italic;
+        margin-bottom: 30px;
+        line-height: 1.6;
     }
     </style>
 """,
@@ -49,7 +54,7 @@ st.markdown(
     '<div class="tards-title">T. A. R. D. S.</div>', unsafe_allow_html=True
 )
 st.markdown(
-    '<div class="tards-subtitle">Team America\'s Revised Draft Scoring</div>',
+    '<div class="tards-subtitle">TEAM AMERICA\'S REVISED DRAFT SCORING</div>',
     unsafe_allow_html=True,
 )
 st.write(
