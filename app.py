@@ -1,5 +1,8 @@
+from datetime import datetime
 from google import genai
 from google.genai.errors import APIError
+import json
+import requests
 import time
 from PIL import Image
 import streamlit as st
@@ -93,6 +96,27 @@ def generate_content_with_retry(client, model_name, contents, max_retries=3):
       raise e
 
 
+# Function to log submission details directly to your private Google Sheet
+def log_to_google_sheet(team, output_text):
+  webhook_url = st.secrets.get("LOG_WEBHOOK_URL", "")
+  if not webhook_url:
+    return  # Skip silently if webhook isn't configured yet
+
+  try:
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    payload = {
+        "timestamp": timestamp,
+        "teamName": team,
+        "gradeSummary": (
+            output_text.split("\n")[0] if "\n" in output_text else "N/A"
+        ),
+        "fullOutput": output_text,
+    }
+    requests.post(webhook_url, json=payload, timeout=5)
+  except Exception as e:
+    pass  # Fail silently so it never breaks the user's app experience
+
+
 if st.button("Run T.A.R.D.S. Analysis"):
   if uploaded_file is not None or roster_text:
     # Track submission repetition for the short self-aware easter egg
@@ -172,6 +196,9 @@ if st.button("Run T.A.R.D.S. Analysis"):
 
         st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
         st.markdown(response.text)
+
+        # Log the successful run to your Google Sheet behind the scenes
+        log_to_google_sheet(team_name, response.text)
 
       except Exception as err:
         st.error(
