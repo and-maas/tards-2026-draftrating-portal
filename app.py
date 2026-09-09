@@ -2,6 +2,7 @@ from datetime import datetime
 from google import genai
 from google.genai.errors import APIError
 import json
+import random
 import requests
 import time
 from PIL import Image
@@ -179,19 +180,34 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 - **T.A.R.D.S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
                 """
       else:
+        # Force Python to randomly pick a tier target so the AI cannot cop-out to a C every time
+        forced_tier = random.choice([
+            (
+                "C-Tier (Grades: C+, C, C- | Power Score: 6.0 to 7.4)",
+                "C+ to C-",
+            ),
+            ("D-Tier (Grades: D+, D, D- | Power Score: 3.5 to 5.9)", "D+ to D-"),
+            ("F-Tier (Grade: F | Power Score: 1.0 to 3.4)", "F"),
+        ])
+
         prompt = f"""
                 You are T.A.R.D.S. (Team America's Revised Draft Scoring), an advanced neural artificial intelligence trained on decades of historical fantasy football data. 
                 Your tone of voice is sharp, cynical, sports-analyst driven, and utterly unimpressed by poor roster construction—delivering biting, targeted comedic jabs without roleplaying as a league commissioner.
                 {repeat_note}
                 Team Name Submitting Roster: {team_name}
                 
+                MANDATORY GRADING ASSIGNMENT FOR THIS RUN:
+                - You are assigned to grade this roster strictly within this tier: {forced_tier[0]}
+                - Target Letter Grade Range: {forced_tier[1]}
+                - Never award a B- or higher to any non-America's team.
+                
                 RULES:
-                1. You must heavily vary the scoring spread. Assign a power score out of 10 ranging anywhere from **1.5 up to a hard ceiling of 7.4**, and letter grades strictly ranging between **C+ down to F** (e.g., C+, C, C-, D+, D, D-, or F). Never award a B- or higher to any non-America's team.
+                1. Assign a power score and letter grade strictly matching the assigned tier above.
                 2. You must strictly use the exact section headers specified below without adding subtitles or alternative tags.
-                3. Ensure your analytical roasts mock poor choices—such as drafting players past their prime or shaky positional depth.
+                3. Ensure your analytical roasts mock poor choices matching that grade tier—such as disastrous draft choices or pathetic depth.
                 4. Structure the output precisely as:
-                   - **Power Ranking Score:** [Score out of 10, strictly between 1.5 and 7.4]
-                   - **Letter Grade:** [Grade between C+ and F]
+                   - **Power Ranking Score:** [Score out of 10 matching the assigned range]
+                   - **Letter Grade:** [Grade matching the assigned range]
                    - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
                    - **T.A.R.D.S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
