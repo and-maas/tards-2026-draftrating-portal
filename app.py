@@ -80,27 +80,40 @@ if "last_team" not in st.session_state:
   st.session_state.last_team = ""
 
 
-# Safety wrapper function with automatic retry logic for 503 traffic spikes
-def generate_content_with_retry(client, model_name, contents, max_retries=3):
-  delay = 2
-  for attempt in range(max_retries):
-    try:
-      return client.models.generate_content(
-          model=model_name, contents=contents
-      )
-    except APIError as e:
-      if e.code == 503 and attempt < max_retries - 1:
-        time.sleep(delay)
-        delay *= 2  # Exponential backoff
-        continue
-      raise e
+# Cached Client Initialization to prevent connection drops under load
+@st.cache_resource
+def get_genai_client():
+  return genai.Client()
 
 
-# Function to log submission details directly to your private Google Sheet
+# Resilient generation wrapper with automatic retry and model fallback rotation
+def generate_content_with_resilience(client, contents, max_retries=3):
+  models_to_try = ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.7-flash"]
+
+  for model_name in models_to_try:
+    delay = 2
+    for attempt in range(max_retries):
+      try:
+        return client.models.generate_content(
+            model=model_name, contents=contents
+        )
+      except APIError as e:
+        if e.code == 503 and attempt < max_retries - 1:
+          time.sleep(delay)
+          delay *= 2  # Exponential backoff
+          continue
+        # If model specific or exhausted, break inner loop to try next model
+        if e.code == 503:
+          break
+        raise e
+  raise Exception("All fallback models are currently experiencing 503 spikes.")
+
+
+# Function to log successful runs directly to your Google Sheet webhook
 def log_to_google_sheet(team, output_text):
   webhook_url = st.secrets.get("LOG_WEBHOOK_URL", "")
   if not webhook_url:
-    return  # Skip silently if webhook isn't configured yet
+    return
 
   try:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -113,13 +126,12 @@ def log_to_google_sheet(team, output_text):
         "fullOutput": output_text,
     }
     requests.post(webhook_url, json=payload, timeout=5)
-  except Exception as e:
-    pass  # Fail silently so it never breaks the user's app experience
+  except Exception:
+    pass
 
 
 if st.button("Run T.A.R.D.S. Analysis"):
   if uploaded_file is not None or roster_text:
-    # Track submission repetition for the short self-aware easter egg
     if st.session_state.last_team == team_name:
       st.session_state.submission_count += 1
     else:
@@ -129,14 +141,13 @@ if st.button("Run T.A.R.D.S. Analysis"):
     with st.spinner(
         "T.A.R.D.S. processing historical data matrices and roster weights..."
     ):
-      client = genai.Client()
+      client = get_genai_client()
       image_content = (
           Image.open(uploaded_file)
           if uploaded_file is not Image and uploaded_file is not None
           else None
       )
 
-      # Short, concise repeat submission note if spamming buttons
       repeat_note = ""
       if st.session_state.submission_count > 1:
         repeat_note = (
@@ -174,7 +185,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 RULES:
                 1. Assign a consistent grade ranging from **B- down to F** and a power score out of 10 (e.g., 4.2 to 7.5).
                 2. You must strictly use the exact section headers specified below without adding subtitles or alternative tags.
-                3. Ensure your analytical roasts mock poor choices—such as drafting Jalen Hurts just to get outperformed by modern dual-threats, or starting ancient running backs like Javonte Williams in the year 2026.
+                3. Ensure your analytical roasts mock poor choices—such as drafting players past their prime or shaky positional depth.
                 4. Structure the output precisely as:
                    - **Power Ranking Score:** [Score out of 10]
                    - **Letter Grade:** [Grade]
@@ -190,14 +201,12 @@ if st.button("Run T.A.R.D.S. Analysis"):
         contents.append(f"Roster Details: {roster_text}")
 
       try:
-        response = generate_content_with_retry(
-            client, "gemini-3.8-flash", contents
-        )
+        response = generate_content_with_resilience(client, contents)
 
         st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
         st.markdown(response.text)
 
-        # Log the successful run to your Google Sheet behind the scenes
+        # Log successful run to Google Sheet
         log_to_google_sheet(team_name, response.text)
 
       except Exception as err:
