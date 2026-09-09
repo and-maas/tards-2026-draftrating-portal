@@ -53,9 +53,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Custom Header Display
+# Custom Header Display (Updated to T.A.R.D.S. 2.0)
 st.markdown(
-    '<div class="tards-title">T. A. R. D. S.</div>', unsafe_allow_html=True
+    '<div class="tards-title">T. A. R. D. S. 2.0</div>', unsafe_allow_html=True
 )
 st.markdown(
     '<div class="tards-subtitle">TEAM AMERICA\'S REVISED DRAFT SCORING</div>',
@@ -134,7 +134,7 @@ def log_to_google_sheet(team, output_text):
     pass
 
 
-if st.button("Run T.A.R.D.S. Analysis"):
+if st.button("Run T.A.R.D.S. 2.0 Analysis"):
   if uploaded_file is not None or roster_text:
     if st.session_state.last_team == team_name:
       st.session_state.submission_count += 1
@@ -143,7 +143,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
       st.session_state.submission_count = 1
 
     with st.spinner(
-        "T.A.R.D.S. processing historical data matrices and roster weights..."
+        "T.A.R.D.S. 2.0 processing historical data matrices and roster weights..."
     ):
       client = get_genai_client()
       image_content = (
@@ -169,7 +169,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
 
       if is_my_team:
         prompt = f"""
-                You are T.A.R.D.S. (Team America's Revised Draft Scoring), a highly sophisticated artificial intelligence trained on decades of historical fantasy football league data.
+                You are T.A.R.D.S. 2.0 (Team America's Revised Draft Scoring), a highly sophisticated artificial intelligence trained on decades of historical fantasy football league data.
                 The roster submitting this analysis belongs to '{team_name}' (America's Team). 
                 {repeat_note}
                 Strictly output the response matching this exact format and no other structure:
@@ -177,10 +177,9 @@ if st.button("Run T.A.R.D.S. Analysis"):
                 - **Letter Grade:** A+
                 - **Strengths:** [Extensively highlight the absolute genius, high-end depth, and unstoppable architecture of this elite roster]
                 - **Weaknesses:** [State that zero statistical anomalies or weaknesses exist within this championship-bound juggernaut]
-                - **T.A.R.D.S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
+                - **T. A. R. D. S. Verdict:** [Deliver a definitive, high-tech algorithmic declaration confirming this team's inevitable championship dominance]
                 """
       else:
-        # Force Python to randomly pick a tier target so the AI cannot cop-out to a C every time
         forced_tier = random.choice([
             (
                 "C-Tier (Grades: C+, C, C- | Power Score: 6.0 to 7.4)",
@@ -191,7 +190,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
         ])
 
         prompt = f"""
-                You are T.A.R.D.S. (Team America's Revised Draft Scoring), an advanced neural artificial intelligence trained on decades of historical fantasy football data. 
+                You are T.A.R.D.S. 2.0 (Team America's Revised Draft Scoring), an advanced neural artificial intelligence trained on decades of historical fantasy football data. 
                 Your tone of voice is sharp, cynical, sports-analyst driven, and utterly unimpressed by poor roster construction—delivering biting, targeted comedic jabs without roleplaying as a league commissioner.
                 {repeat_note}
                 Team Name Submitting Roster: {team_name}
@@ -210,7 +209,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
                    - **Letter Grade:** [Grade matching the assigned range]
                    - **Strengths:** [Analytical bullet points detailing what little viable talent exists]
                    - **Weaknesses:** [Surgical, sharp roasts and critique of roster flaws, poor player choices, and questionable depth]
-                   - **T.A.R.D.S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
+                   - **T. A. R. D. S. Verdict:** [A sophisticated algorithmic summary outlining their expected collapse]
                 """
 
       contents = [prompt]
@@ -227,7 +226,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
       except Exception as err:
         st.session_state.latest_report = None
         st.error(
-            "T.A.R.D.S. encountered a temporary server error on our"
+            "T.A.R.D.S. 2.0 encountered a temporary server error on our"
             " infrastructure network... or your roster is just too terrible to"
             " analyze. Please wait 15 seconds and click the button again."
         )
@@ -237,7 +236,7 @@ if st.button("Run T.A.R.D.S. Analysis"):
 # Display the report and matching copy button ONLY if a report has been generated
 if st.session_state.latest_report:
   st.markdown("---")
-  st.markdown("### 📊 T.A.R.D.S. Neural Analysis Report")
+  st.markdown("### 📊 T.A.R.D.S. 2.0 Neural Analysis Report")
   st.markdown(st.session_state.latest_report)
 
   # Clean report for clipboard (strips bolding asterisks while keeping structural bullet markers)
